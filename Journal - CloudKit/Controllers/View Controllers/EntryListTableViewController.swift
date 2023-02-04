@@ -51,6 +51,8 @@ class EntryListTableViewController: UITableViewController {
 
         //placing each entry in entries array in individual cells
         let entry = EntryController.shared.entries[indexPath.row]
+        
+        //UIListContentConfiguration?
         cell.textLabel?.text = entry.title
         cell.detailTextLabel?.text = entry.timestamp.formatDate()
 

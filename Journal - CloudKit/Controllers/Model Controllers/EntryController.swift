@@ -72,26 +72,70 @@ class EntryController {
         
         //.fetch() ???? used to replace .perform - deprecated
         //.perform - Searches for records matching a predicate in the specified record zone.
-        privateDB.perform(query, inZoneWith: nil) { records, error in
-            
-            //handling optional error
-            if let error = error {
+        
+        
+        privateDB.fetch(withQuery: query) { result in
+            switch result {
+            case .success(let result):
+                result.matchResults.compactMap{ $0.1 }
+                    .forEach{
+                        switch $0 {
+                        case .success(let record):
+                            guard let entry = Entry(ckRecord: record) else {
+                                completion(.failure(.unableToUnwrap))
+                                return
+                             }
+                            self.entries.append(entry)
+                        case.failure:
+                            completion(.failure(.unableToUnwrap))
+                        }
+                    }
+                
+                completion(.success(self.entries))
+         
+//                //unwrapping successfully fetched records
+//                guard let records = records else { completion(.failure(.unableToUnwrap)); return }
+//                print("Successfully fetched all entries")
+//
+//                //filtering through entries in records that are non-nil
+//                let entries = records.compactMap ({ Entry(ckRecord: $0) })
+//
+//                //setting filtered entries to source of truth
+//                self.entries = entries
+//
+//                //@escaping complete with array of entry objects
+//                completion(.success(entries))
+        
+            case .failure(let error):
                 completion(.failure(.ckError(error)))
             }
-            
-            //unwrapping successfully fetched records
-            guard let records = records else { completion(.failure(.unableToUnwrap)); return }
-            print("Successfully fetched all entries")
-            
-            //filtering through entries in records that are non-nil
-            let entries = records.compactMap ({ Entry(ckRecord: $0) })
-            
-            //setting filtered entries to source of truth
-            self.entries = entries
-            
-            //@escaping complete with array of entry objects
-            completion(.success(entries))
         }
+        
+//        privateDB.perform(query, inZoneWith: nil) { records, error in
+//
+//            //handling optional error
+//            if let error = error {
+//                completion(.failure(.ckError(error)))
+//            }
+//
+//            //unwrapping successfully fetched records
+//            guard let records = records else { completion(.failure(.unableToUnwrap)); return }
+//            print("Successfully fetched all entries")
+//
+//            //filtering through entries in records that are non-nil
+//            let entries = records.compactMap ({ Entry(ckRecord: $0) })
+//
+//            //setting filtered entries to source of truth
+//            self.entries = entries
+//
+//            //@escaping complete with array of entry objects
+//            completion(.success(entries))
+//        }
+        
+        //pagination - fetch in batches not everything all at once - fetches pages then will fetch more data when clicking or scrolling to next page/section
+            //hit ~20 results then spinner to load next ~20 results
+            //query cursor
+        
     }
     
 }//end of class
